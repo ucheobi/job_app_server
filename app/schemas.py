@@ -27,3 +27,10 @@ class UserResponse(UserRegistration):
 
     class Config:
         from_attribute = True
+
+class ResponseToken(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    id: str | None =  None

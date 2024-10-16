@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from ... import schemas, models, utils
 from ...database import get_db
+from typing import List
 
 
 router = APIRouter(
@@ -26,7 +27,7 @@ def create_user(user: schemas.UserRegistration, db: Session = Depends(get_db)):
 
     return new_user
 
-@router.get("/")
+@router.get("/", response_model=List[schemas.UserResponse])
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
 
