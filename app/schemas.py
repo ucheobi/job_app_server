@@ -64,3 +64,6 @@ class Profile(BaseModel):
 
 class ProfileCreate(Profile):
     pass
+
+class ProfileResponse(Profile):
+    owner: UserResponse

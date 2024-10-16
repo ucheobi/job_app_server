@@ -10,7 +10,7 @@ from  . import schemas, database, models
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MUNUTES = 60
+ACCESS_TOKEN_EXPIRE_MUNUTES = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
