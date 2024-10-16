@@ -7,6 +7,7 @@ from datetime import datetime
 class Role(str, Enum):
     JOB_SEEKER = "job_seeker"
     EMPLOYER = "employer"
+    ADMIN = "admin"
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -23,6 +24,6 @@ class UserLogin(BaseModel):
 class UserResponse(UserRegistration):
     id: int
     password: str = Field(exclude=True)
-    
+
     class Config:
         from_attribute = True

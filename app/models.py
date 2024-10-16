@@ -2,12 +2,17 @@ from sqlalchemy import  Column, String, Integer, Enum as SqlEnum
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from enum import Enum
+from sqlalchemy.ext.declarative import declarative_base
 
-from .database import Base
+
+Base = declarative_base()
+metadata = Base.metadata
 
 class UserRole(str, Enum):
     JOB_SEEKER = "job_seeker"
     EMPLOYER = "employer"
+    #An admin can manage all users
+    ADMIN = "admin"
 
 class User(Base):
     __tablename__ = "users"

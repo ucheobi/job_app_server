@@ -1,9 +1,7 @@
 from fastapi import Depends
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Annotated
-from  app.api.routers import user
+from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
@@ -25,5 +23,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-SessionDep = Annotated[Session, Depends(get_db)]
