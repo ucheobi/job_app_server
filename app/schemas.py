@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Union
 from enum import Enum
-from datetime import date
+from datetime import datetime
 
 
 class Role(str, Enum):
@@ -10,8 +10,8 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 class UserBase(BaseModel):
-    email: EmailStr
-    password: str
+    email: EmailStr = Field(max_length=255)
+    password: str = Field(min_length=8, max_length=40)
 
 class UserRegistration(UserBase):
     first_name: str
@@ -67,3 +67,24 @@ class ProfileCreate(Profile):
 
 class ProfileResponse(Profile):
     owner: UserResponse
+
+class CompanySize(str, Enum):
+    SMALL = "SMALL"
+    MEDIUM = "MEDIUM"
+    LARGE = "LARGE"
+
+class Recruiter(BaseModel):
+    company_name: str
+    company_website: str | None = Field(default=None)
+    company_email: str
+    company_size: CompanySize
+    industry: str
+    company_description: str
+    company_logo: str | None = Field(default=None)
+    posting_permission: bool = False
+
+    class Config:
+        from_attribute = True
+
+class RecruiterCreate(Recruiter):
+    pass

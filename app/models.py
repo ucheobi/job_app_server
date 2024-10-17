@@ -1,4 +1,4 @@
-from sqlalchemy import  Column, String, Integer, Enum as SqlEnum, ForeignKey, JSON
+from sqlalchemy import  Column, String, Integer, Enum as SqlEnum, ForeignKey, JSON, Boolean
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from enum import Enum
@@ -43,3 +43,22 @@ class Profile(Base):
     #storing Education and work experience as an array of JSON obhjects
     education = Column(JSON, nullable=True)
     work_experience = Column(JSON, nullable=True)
+
+class CompanySize(str, Enum):
+    SMALL = "SMALL"
+    MEDIUM = "MEDIUM"
+    LARGE = "LARGE"
+
+class Recruiter(Base):
+    __tablename__ = "recruiters"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    company_name = Column(String, nullable=False)
+    company_website = Column(String, nullable=True)
+    company_email = Column(String, nullable=False, unique=True)
+    company_size = Column(SqlEnum(CompanySize), nullable=False)
+    industry = Column(String, nullable=False)
+    company_description = Column(String, nullable=False)
+    company_logo = Column(String, nullable=True)
+    posting_permission = Column(Boolean, server_default="FALSE", nullable=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
