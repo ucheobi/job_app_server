@@ -35,6 +35,8 @@ class ResponseToken(BaseModel):
 class TokenData(BaseModel):
     id: str | None =  None
 
+
+#Job seeker profile
 class Education(BaseModel):
     institution: str
     degree: str
@@ -50,7 +52,7 @@ class WorkExperience(BaseModel):
     end_date: Optional[str]
     description: Optional[str]
 
-class Profile(BaseModel):
+class JobSeekerProfile(BaseModel):
     title: str
     current_location: str
     resume_url: Optional[str]
@@ -62,18 +64,20 @@ class Profile(BaseModel):
     class Config:
         from_attribute = True
 
-class ProfileCreate(Profile):
+class JobSeekerProfileCreate(JobSeekerProfile):
     pass
 
-class ProfileResponse(Profile):
+class JobSeekerProfileResponse(JobSeekerProfile):
     owner: UserResponse
 
+
+#Company profile account
 class CompanySize(str, Enum):
     SMALL = "SMALL"
     MEDIUM = "MEDIUM"
     LARGE = "LARGE"
 
-class Recruiter(BaseModel):
+class CompanyProfile(BaseModel):
     company_name: str
     company_website: str | None = Field(default=None)
     company_email: str
@@ -86,5 +90,9 @@ class Recruiter(BaseModel):
     class Config:
         from_attribute = True
 
-class RecruiterCreate(Recruiter):
+class CompanyProfileCreate(CompanyProfile):
     pass
+
+class CompanyProfileResponse(CompanyProfile):
+    id: int
+    owner: UserResponse

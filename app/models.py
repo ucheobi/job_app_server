@@ -26,8 +26,8 @@ class User(Base):
     role = Column(SqlEnum(UserRole), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 
-class Profile(Base):
-    __tablename__ = "profiles"
+class JobSeekerProfile(Base):
+    __tablename__ = "job_seeker_profiles"
 
     id = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
@@ -49,8 +49,8 @@ class CompanySize(str, Enum):
     MEDIUM = "MEDIUM"
     LARGE = "LARGE"
 
-class Recruiter(Base):
-    __tablename__ = "recruiters"
+class CompanyProfile(Base):
+    __tablename__ = "company_profiles"
 
     id = Column(Integer, primary_key=True, nullable=False)
     company_name = Column(String, nullable=False)
@@ -62,3 +62,5 @@ class Recruiter(Base):
     company_logo = Column(String, nullable=True)
     posting_permission = Column(Boolean, server_default="FALSE", nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
+    owner = relationship("User")

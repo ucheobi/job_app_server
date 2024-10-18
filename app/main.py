@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.routers import profile, user, auth, recruiter
+from app.api.routers import company_profile, job_profile, user, auth
 from . import models, database
 
 models.Base.metadata.create_all(bind=database.engine)
@@ -8,5 +8,5 @@ app = FastAPI()
 
 app.include_router(user.router)
 app.include_router(auth.router)
-app.include_router(profile.router)
-app.include_router(recruiter.router)
+app.include_router(job_profile.router)
+app.include_router(company_profile.router)
