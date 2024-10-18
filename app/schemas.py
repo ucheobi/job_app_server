@@ -1,8 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List, Union
+from typing import Optional, List
 from enum import Enum
-from datetime import datetime
-
 
 class Role(str, Enum):
     JOB_SEEKER = "job_seeker"
@@ -77,7 +75,7 @@ class CompanySize(str, Enum):
     MEDIUM = "MEDIUM"
     LARGE = "LARGE"
 
-class CompanyProfile(BaseModel):
+class Company(BaseModel):
     company_name: str
     company_website: str | None = Field(default=None)
     company_email: str
@@ -90,9 +88,13 @@ class CompanyProfile(BaseModel):
     class Config:
         from_attribute = True
 
-class CompanyProfileCreate(CompanyProfile):
+class CompanyCreate(Company):
     pass
 
-class CompanyProfileResponse(CompanyProfile):
+class CompanyResponse(Company):
     id: int
     owner: UserResponse
+
+
+class CustomMessage(BaseModel):
+    message: str

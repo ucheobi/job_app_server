@@ -49,8 +49,8 @@ class CompanySize(str, Enum):
     MEDIUM = "MEDIUM"
     LARGE = "LARGE"
 
-class CompanyProfile(Base):
-    __tablename__ = "company_profiles"
+class Company(Base):
+    __tablename__ = "companies"
 
     id = Column(Integer, primary_key=True, nullable=False)
     company_name = Column(String, nullable=False)
