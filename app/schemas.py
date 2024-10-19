@@ -51,7 +51,7 @@ class WorkExperience(BaseModel):
     end_date: str | None = Field(default=None)
     description: str | None = Field(default=None)
 
-class JobSeekerProfile(BaseModel):
+class Applicant(BaseModel):
     title: str
     current_location: str
     resume_url: str | None = Field(default=None)
@@ -63,10 +63,10 @@ class JobSeekerProfile(BaseModel):
     class Config:
         from_attribute = True
 
-class JobSeekerProfileCreate(JobSeekerProfile):
+class ApplicantCreate(Applicant):
     pass
 
-class JobSeekerProfileResponse(JobSeekerProfile):
+class ApplicantResponse(Applicant):
     owner: UserResponse
 
 
@@ -122,7 +122,9 @@ class CustomMessage(BaseModel):
     message: str
 
 
-
 class JobCreate(JobBase):
     company_id: int
+
+class JobResponse(JobBase):
+    id: int
 

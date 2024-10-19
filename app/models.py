@@ -11,7 +11,7 @@ Base = declarative_base()
 metadata = Base.metadata
 
 class UserRole(str, Enum):
-    JOB_SEEKER = "job_seeker"
+    APPLICANT = "applicant"
     EMPLOYER = "employer"
     #An admin can manage all users
     ADMIN = "admin"
@@ -27,8 +27,8 @@ class User(Base):
     role = Column(SqlEnum(UserRole), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 
-class JobSeekerProfile(Base):
-    __tablename__ = "job_seeker_profiles"
+class Applicant(Base):
+    __tablename__ = "applicants"
 
     id = Column(Integer, primary_key=True, index=True)
     owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
@@ -37,7 +37,7 @@ class JobSeekerProfile(Base):
     title = Column(String, nullable=False)
     resume_url = Column(String, nullable=True)
     portfolio_url = Column(String, nullable=True)
-    applications = relationship("JobApplication", back_populates="job_seeker_profile")
+    applications = relationship("JobApplication", back_populates="applicant")
     
     #Storing skills as List of strings
     skills = Column(JSON, nullable=True)
@@ -96,9 +96,9 @@ class JobApplication(Base):
     __tablename__ = "job_applications"
 
     id = Column(Integer, primary_key=True, nullable=False)
-    job_applicant_id = Column(Integer, ForeignKey("job_seeker_profiles.id"), nullable=False)
+    job_applicant_id = Column(Integer, ForeignKey("applicants.id"), nullable=False)
     job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
     application_date = Column(Date)
 
     job =  relationship("Job", back_populates="applicants")
-    job_seeker_profile = relationship("JobSeekerProfile", back_populates="applications")
+    applicant = relationship("Applicant", back_populates="applications")

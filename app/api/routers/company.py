@@ -18,7 +18,7 @@ def create_company_profile(
     ):
 
     #Verify role of user
-    if current_user.role == "job_seeker":
+    if current_user.role == "applicant":
         print("You are not authorized")
         return Response(status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -53,7 +53,7 @@ def get_company_profile(
     ):
 
     #Verify role of user
-    if current_user.role == "job_seeker":
+    if current_user.role == "applicant":
         print("You are not authorized")
         return Response(status_code=status.HTTP_401_UNAUTHORIZED)
 
