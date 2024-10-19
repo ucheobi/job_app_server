@@ -10,10 +10,9 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 metadata = Base.metadata
 
-class UserRole(str, Enum):
+class Role(str, Enum):
     APPLICANT = "applicant"
     EMPLOYER = "employer"
-    #An admin can manage all users
     ADMIN = "admin"
 
 class User(Base):
@@ -24,7 +23,7 @@ class User(Base):
     last_name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
-    role = Column(SqlEnum(UserRole), nullable=False)
+    role = Column(SqlEnum(Role), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
 
 class Applicant(Base):

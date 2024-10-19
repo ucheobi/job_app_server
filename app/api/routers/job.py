@@ -12,8 +12,12 @@ router = APIRouter(
 @router.post("/")
 def create_job(
     job: schemas.JobCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(oauth2.get_current_user)
 ):
+    
+    if current_user.role == "applicant":
+        return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
       
     try:
         new_job = models.Job(**job.model_dump())
@@ -47,7 +51,16 @@ def get_all_jobs(db: Session = Depends(get_db)):
     return jobs
 
 @router.put("/{job_id}", response_model=schemas.JobResponse)
-def update_job(job_id: int, job_data: schemas.JobCreate, db: Session = Depends(get_db)):
+def update_job(
+        job_id: int, 
+        job_data: schemas.JobCreate, 
+        db: Session = Depends(get_db),
+        current_user = Depends(oauth2.get_current_user)
+     ):
+    
+    if current_user.role == "applicant":
+        return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
+    
     job_query = db.query(models.Job).filter(models.Job.id == job_id)
     job = job_query.first()
 
@@ -62,7 +75,15 @@ def update_job(job_id: int, job_data: schemas.JobCreate, db: Session = Depends(g
     return job_query.first()
 
 @router.delete("/{job_id}")
-def delete_job(job_id: int, db: Session = Depends(get_db)):
+def delete_job(
+        job_id: int, 
+        db: Session = Depends(get_db),
+        current_user: int = Depends(oauth2.get_current_user)
+    ):
+
+    if current_user.role == "applicant":
+        return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
+    
     job_query = db.query(models.Job).filter(models.Job.id == job_id)
     job = job_query.first()
 

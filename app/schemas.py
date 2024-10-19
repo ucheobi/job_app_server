@@ -4,7 +4,7 @@ from enum import Enum
 from datetime import date, datetime
 
 class Role(str, Enum):
-    JOB_SEEKER = "job_seeker"
+    APPLICANT = "applicant"
     EMPLOYER = "employer"
     ADMIN = "admin"
 
@@ -12,7 +12,7 @@ class UserBase(BaseModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=40)
 
-class UserRegistration(UserBase):
+class UserCreate(UserBase):
     first_name: str
     last_name: str
     role: Role
@@ -20,7 +20,7 @@ class UserRegistration(UserBase):
 class UserLogin(BaseModel):
     pass
 
-class UserResponse(UserRegistration):
+class UserResponse(UserCreate):
     id: int
     password: str = Field(exclude=True)
 

@@ -19,8 +19,7 @@ def create_company_profile(
 
     #Verify role of user
     if current_user.role == "applicant":
-        print("You are not authorized")
-        return Response(status_code=status.HTTP_401_UNAUTHORIZED)
+        return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
 
     _account = db.query(models.Company).filter(models.Company.owner_id == current_user.id).first()
 
