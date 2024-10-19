@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Union
 from enum import Enum
+from datetime import date, datetime
 
 class Role(str, Enum):
     JOB_SEEKER = "job_seeker"
@@ -47,17 +48,17 @@ class WorkExperience(BaseModel):
     company: str
     title: str
     start_date: str
-    end_date: Optional[str]
-    description: Optional[str]
+    end_date: str | None = Field(default=None)
+    description: str | None = Field(default=None)
 
 class JobSeekerProfile(BaseModel):
     title: str
     current_location: str
-    resume_url: Optional[str]
-    portfolio_url: Optional[str]
-    skills: Optional[List[str]]
-    education: Optional[List[Education]]
-    work_experience: Optional[List[WorkExperience]]
+    resume_url: str | None = Field(default=None)
+    portfolio_url: str | None = Field(default=None)
+    skills: List[str] = []
+    education: List[Education] = []
+    work_experience: List[WorkExperience] = []
 
     class Config:
         from_attribute = True
@@ -91,10 +92,37 @@ class Company(BaseModel):
 class CompanyCreate(Company):
     pass
 
+class Status(str, Enum):
+    OPEN = "Open"
+    CLOSED = "Closed"
+
+class JobBase(BaseModel):
+    title: str
+    description: str
+    requirements: str | None = Field(default=None)
+    location: str
+    job_type: str
+    salary_min: float | None = Field(default=None)
+    salary_max: float | None = Field(default=None)
+    posted_date: date | None = Field(default=None)
+    status: Status
+
+    class Config:
+        from_attribute = True
+
 class CompanyResponse(Company):
     id: int
     owner: UserResponse
+    created_at: datetime
+    
+    jobs: List[JobBase]
 
 
 class CustomMessage(BaseModel):
     message: str
+
+
+
+class JobCreate(JobBase):
+    company_id: int
+

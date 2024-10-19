@@ -1,4 +1,5 @@
-from sqlalchemy import  Column, String, Integer, Enum as SqlEnum, ForeignKey, JSON, Boolean
+from datetime import date, datetime
+from sqlalchemy import  Column, Date, Float, String, Integer, Enum as SqlEnum, ForeignKey, JSON, Boolean, Text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from enum import Enum
@@ -36,6 +37,7 @@ class JobSeekerProfile(Base):
     title = Column(String, nullable=False)
     resume_url = Column(String, nullable=True)
     portfolio_url = Column(String, nullable=True)
+    applications = relationship("JobApplication", back_populates="job_seeker_profile")
     
     #Storing skills as List of strings
     skills = Column(JSON, nullable=True)
@@ -62,5 +64,41 @@ class Company(Base):
     company_logo = Column(String, nullable=True)
     posting_permission = Column(Boolean, server_default="FALSE", nullable=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+
+    jobs = relationship("Job", back_populates="company")
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, unique=True)
     owner = relationship("User")
+
+class Status(str, Enum):
+    OPEN = "Open"
+    CLOSED = "Closed"
+
+class Job(Base):
+    __tablename__ = "jobs"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    title = Column(String(100), nullable=False)
+    description = Column(Text, nullable=False)
+    requirements = Column(Text, nullable=False)
+    location = Column(String(100), nullable=False)
+    job_type = Column(String(50), nullable=False)
+    salary_min = Column(Float, nullable=True)
+    salary_max = Column(Float, nullable=True)
+    posted_date = Column(Date, default=date.today)
+    status = Column(SqlEnum(Status), nullable=False)
+
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
+    company = relationship("Company", back_populates="jobs")
+    applicants = relationship("JobApplication", back_populates="job")
+
+
+class JobApplication(Base):
+    __tablename__ = "job_applications"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    job_applicant_id = Column(Integer, ForeignKey("job_seeker_profiles.id"), nullable=False)
+    job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
+    application_date = Column(Date)
+
+    job =  relationship("Job", back_populates="applicants")
+    job_seeker_profile = relationship("JobSeekerProfile", back_populates="applications")
