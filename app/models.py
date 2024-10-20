@@ -90,6 +90,11 @@ class Job(Base):
     company = relationship("Company", back_populates="jobs")
     applicants = relationship("JobApplication", back_populates="job")
 
+class ApplicationStatus(str, Enum):
+    PENDING = "Pending"
+    REVIEWED = "Reviewed"
+    ACCEPTED = "Accepted"
+    REJECTED = "Rejected"
 
 class JobApplication(Base):
     __tablename__ = "job_applications"
@@ -97,7 +102,9 @@ class JobApplication(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     job_applicant_id = Column(Integer, ForeignKey("applicants.id"), nullable=False)
     job_id = Column(Integer, ForeignKey("jobs.id"), nullable=False)
-    application_date = Column(Date)
+    application_date = Column(Date, default=date.today)
+    application_status = Column(SqlEnum(ApplicationStatus), default=ApplicationStatus.PENDING)
+    resume_file = Column(String, nullable=True)
 
     job =  relationship("Job", back_populates="applicants")
     applicant = relationship("Applicant", back_populates="applications")
