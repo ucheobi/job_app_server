@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 from sqlalchemy import  Column, Date, Float, String, Integer, Enum as SqlEnum, ForeignKey, JSON, Boolean, Text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text

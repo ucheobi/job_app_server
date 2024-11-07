@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List, Union
+from typing import List
 from enum import Enum
 from datetime import date, datetime
 
@@ -54,7 +54,7 @@ class WorkExperience(BaseModel):
 class Applicant(BaseModel):
     title: str
     current_location: str
-    resume_url: str | None = Field(default=None)
+    resume_url: str
     portfolio_url: str | None = Field(default=None)
     skills: List[str] = []
     education: List[Education] = []

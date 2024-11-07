@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Response
+import os
+from fastapi import APIRouter, Depends, status, HTTPException, Response, UploadFile, File, Form
 from sqlalchemy.orm import Session
+from app.utils import save_resume_file
 from ... import schemas, models, oauth2
 from ...database import get_db
+import json
 
 
 router = APIRouter(
@@ -9,10 +12,10 @@ router = APIRouter(
     tags=['Applicants']
 )
 
-
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.ApplicantResponse)
-def create_applicant_profile(
-        applicant: schemas.ApplicantCreate, 
+async def create_applicant_profile(
+        applicantData: str = Form(...), 
+        resumeFile: UploadFile = File(...),
         db: Session = Depends(get_db), 
         current_user = Depends(oauth2.get_current_user)
     ):
@@ -22,13 +25,25 @@ def create_applicant_profile(
         print("You are not authorized")
         return Response(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    _applicant = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
+    #Check if user already has a profile
+    existing_applicant = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
     
-    if _applicant:
-        return _applicant
+    if existing_applicant:
+        return existing_applicant
+
+    #Parse JSON string 
+    try:
+        applicant_data_dict = json.loads(applicantData)
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid json data detected!")
+
+    #Save resume file in local directory
+    resume_url = await save_resume_file(resumeFile)
+    applicant_data_dict["resume_url"] = resume_url
 
     try:
-        new_applicant = models.Applicant(owner_id=current_user.id, **applicant.model_dump())
+        new_applicant = models.Applicant(owner_id=current_user.id, **applicant_data_dict)
         db.add(new_applicant)
         db.commit()
         db.refresh(new_applicant)
