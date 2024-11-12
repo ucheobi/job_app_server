@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, Response, status, HTTPException
 from sqlalchemy.orm import Session
-from ... import schemas, models, utils
+from ... import schemas, models, utils, oauth2
 from ...database import get_db
 from typing import List
 
@@ -11,24 +11,63 @@ router = APIRouter(
 )
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponseWithToken)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     _user = db.query(models.User).filter(models.User.email == user.email).first()
 
     if _user and _user.email == user.email:
-        raise HTTPException(status_code=status.HTTP_226_IM_USED, detail=f"user with email: {_user.email} already exist!!!")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User with email: {_user.email} already exist. Sign in to your account!!!")
     
     user.password = utils.get_password_hash(user.password)
     
     new_user = models.User(**user.model_dump())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
 
-    return new_user
+    # send a token
+    token = oauth2.create_access_token(data={"user_id": new_user.email, "role": new_user.role})
+
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail={
+                    "message": f"Failed to create user, something went wrong!!!",
+                    "error": str(e)
+                }
+            )
+    
+    return {
+        "access_token": token,
+        "user": new_user
+    }
 
 @router.get("/", response_model=List[schemas.UserResponse])
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
 
     return users
+
+@router.delete("/{user_id}")
+def delete_user(
+        user_id: int, 
+        db: Session = Depends(get_db),
+        current_user: int = Depends(oauth2.get_current_user)
+    ):
+
+    if not current_user:
+        return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
+    
+    user_query = db.query(models.User).filter(models.User.id == user_id)
+    user = user_query.first()
+
+    if user == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"user with id of {user_id} does not exist!!!")
+    
+    user_query.delete()
+    db.commit()
+
+    return schemas.CustomMessage(message="User successfully deleted")

@@ -31,6 +31,10 @@ class ResponseToken(BaseModel):
     access_token: str
     token_type: str
 
+class UserResponseWithToken(BaseModel):
+    access_token: str
+    user: UserResponse
+
 class TokenData(BaseModel):
     id: str | None =  None
 
