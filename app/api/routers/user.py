@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserResponseWithToken)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.ResponseToken)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     _user = db.query(models.User).filter(models.User.email == user.email).first()
 
@@ -23,7 +23,14 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     new_user = models.User(**user.model_dump())
 
     # send a token
-    token = oauth2.create_access_token(data={"user_id": new_user.email, "role": new_user.role})
+    token = oauth2.create_access_token(data={
+        "user_id": new_user.id, 
+        "role": new_user.role, 
+        "email": user.email, 
+        "first_name": user.first_name, 
+        "last_name": user.last_name
+        }
+    )
 
     try:
         db.add(new_user)
@@ -42,7 +49,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     return {
         "access_token": token,
-        "user": new_user
+        "token_type": "bearer"
     }
 
 @router.get("/", response_model=List[schemas.UserResponse])

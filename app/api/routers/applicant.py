@@ -67,7 +67,7 @@ def get_applicant_profile(
     applicant  = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
 
     if not applicant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No Applicants found, add your JobSeekerProfile!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No profile found, add your JobSeekerProfile!")
 
     return applicant
 

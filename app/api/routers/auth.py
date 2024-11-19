@@ -20,7 +20,14 @@ def login(user_credential: OAuth2PasswordRequestForm = Depends(), db: Session = 
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Username or password incorrect!")
     
     # return an access token
-    access_token = oauth2.create_access_token(data={"user_id": user.email, "role": user.role})
+    access_token = oauth2.create_access_token(data={
+            "user_id": user.id, 
+            "email": user.email,
+            "role": user.role, 
+            "first_name": user.first_name, 
+            "last_name": user.last_name
+        }
+    )
 
     return {
         "access_token": access_token,
