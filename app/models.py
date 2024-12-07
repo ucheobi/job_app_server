@@ -1,5 +1,5 @@
 from datetime import date
-from sqlalchemy import  Column, Date, Float, String, Integer, Enum as SqlEnum, ForeignKey, JSON, Boolean, Text
+from sqlalchemy import  Column, Date, Float, String, Integer, Enum as SqlEnum, ForeignKey, JSON, Boolean, Text, LargeBinary
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from enum import Enum
@@ -34,6 +34,7 @@ class Applicant(Base):
     owner = relationship("User")
     current_location = Column(String, nullable=False)
     title = Column(String, nullable=False)
+    resume = Column(LargeBinary, nullable=True)
     resume_url = Column(String, nullable=True)
     portfolio_url = Column(String, nullable=True)
     applications = relationship("JobApplication", back_populates="applicant")

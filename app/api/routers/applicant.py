@@ -1,4 +1,5 @@
 import os
+from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException, Response, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.utils import save_resume_file
@@ -8,7 +9,7 @@ import json
 
 
 router = APIRouter(
-    prefix="/applicants",
+    prefix="/applicant",
     tags=['Applicants']
 )
 
@@ -25,7 +26,7 @@ async def create_applicant_profile(
         print("You are not authorized")
         return Response(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    #Check if user already has a profile
+    #Check if user already has a profile and return it
     existing_applicant = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
     
     if existing_applicant:
@@ -34,13 +35,19 @@ async def create_applicant_profile(
     #Parse JSON string 
     try:
         applicant_data_dict = json.loads(applicantData)
-
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid json data detected!")
 
     #Save resume file in local directory
-    resume_url = await save_resume_file(resumeFile)
-    applicant_data_dict["resume_url"] = resume_url
+    #await save_resume_file(resumeFile)
+    if resumeFile and resumeFile.content_type not in ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+        raise HTTPException(status_code="401", detail="Only pdf or doc/docx files are allowed!")
+
+    if resumeFile:
+        binary_content = await resumeFile.read()
+
+        applicant_data_dict["resume"] = binary_content
+        applicant_data_dict["resume_url"] = resumeFile.filename
 
     try:
         new_applicant = models.Applicant(owner_id=current_user.id, **applicant_data_dict)
@@ -72,6 +79,12 @@ def get_applicant_profile(
     return applicant
 
 
+@router.get("/all", response_model=List[schemas.Applicant])
+def get_all_applicants(db: Session = Depends(get_db)):
+    applicants = db.query(models.Applicant).all()
+
+    return applicants
+
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_applicant_profile(db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
     user_profile_query = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id)
@@ -88,8 +101,9 @@ def delete_applicant_profile(db: Session = Depends(get_db), current_user = Depen
 
 
 @router.put("/", response_model=schemas.ApplicantResponse)
-def update_applicant_profile(
-        applicant_update: schemas.ApplicantCreate, 
+async def update_applicant_profile(
+        applicantData: str = Form(...),
+        resumeFile: UploadFile = None,
         db: Session = Depends(get_db), 
         current_user = Depends(oauth2.get_current_user)
     ):
@@ -100,7 +114,30 @@ def update_applicant_profile(
     if not applicant:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No profile exist for current user, please add your job profile!!!")
     
-    applicant_query.update(applicant_update.model_dump(), synchronize_session=False)
-    db.commit()
+    #Parse JSON string 
+    try:
+        applicant_data_dict = json.loads(applicantData)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid json data detected!")
+    
+    if resumeFile and resumeFile.content_type not in ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+        raise HTTPException(status_code="401", detail="Only pdf or doc/docx files are allowed!")
+
+    if resumeFile:
+        binary_content = await resumeFile.read()
+
+        applicant_data_dict["resume"] = binary_content
+        applicant_data_dict["resume_url"] = resumeFile.filename
+    
+    try:
+        applicant_query.update(applicant_data_dict, synchronize_session=False)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                            detail={
+                                "message": f"Failed to Update profile",
+                                "error": str(e)
+                            })
 
     return applicant
