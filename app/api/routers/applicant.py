@@ -1,8 +1,8 @@
-import os
-from typing import List
+from typing import List, Literal
 from fastapi import APIRouter, Depends, status, HTTPException, Response, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from app.utils import save_resume_file
+
+from app.utils import fetch_applicant_profile
 from ... import schemas, models, oauth2
 from ...database import get_db
 import json
@@ -22,6 +22,7 @@ async def create_applicant_profile(
     ):
 
     #ToDo - Make an admin also create a job profile for user and attach owner of the profile
+
     if current_user.role == "employer":
         print("You are not authorized")
         return Response(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -65,18 +66,13 @@ async def create_applicant_profile(
     return new_applicant
 
 
-@router.get("/", response_model=schemas.Applicant)
+@router.get("/", response_model=schemas.ApplicantResponse | Literal['NO_PROFILE_FOUND'])
 def get_applicant_profile(
         db: Session = Depends(get_db), 
         current_user = Depends(oauth2.get_current_user)
     ):
 
-    applicant  = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
-
-    if not applicant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No profile found, add your JobSeekerProfile!")
-
-    return applicant
+    return fetch_applicant_profile(db, current_user.id)
 
 
 @router.get("/all", response_model=List[schemas.Applicant])

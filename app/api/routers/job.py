@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
+
+from app.utils import fetch_jobs
 from ... import schemas, models, oauth2
 from ...database import get_db
 from typing import List
@@ -14,8 +16,7 @@ def create_job(
     job: schemas.JobCreate,
     db: Session = Depends(get_db),
     current_user = Depends(oauth2.get_current_user)
-):
-    
+):  
     if current_user.role == "applicant":
         return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
       
@@ -46,7 +47,7 @@ def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[schemas.JobResponse])
 def get_all_jobs(db: Session = Depends(get_db)):
-    jobs = db.query(models.Job).all()
+    jobs = fetch_jobs(db)
 
     return jobs
 

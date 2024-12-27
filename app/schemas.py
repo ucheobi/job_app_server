@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import List
+from typing import List, Literal
 from enum import Enum
 from datetime import date, datetime
 
@@ -103,13 +103,16 @@ class Status(str, Enum):
 class JobBase(BaseModel):
     title: str
     description: str
-    requirements: str | None = Field(default=None)
+    required_skills:  List[str] = []
+    technologies: List[str] = []
     location: str
     job_type: str
     salary_min: float | None = Field(default=None)
     salary_max: float | None = Field(default=None)
     posted_date: date | None = Field(default=None)
     status: Status
+    other_details: str | None = Field(default=None)
+    our_offers: str | None = Field(default=None)
 
     class Config:
         from_attribute = True
@@ -131,4 +134,14 @@ class JobCreate(JobBase):
 
 class JobResponse(JobBase):
     id: int
+    company: Company
 
+class InitialData(BaseModel):
+    initial_applicant_data: ApplicantResponse
+    initial_job_data: JobResponse
+
+class ResponseTokenWithInitialData(BaseModel):
+    access_token: str
+    token_type: str
+    applicant: ApplicantResponse | Literal['NO_PROFILE_FOUND']
+    jobs: List[JobBase]
