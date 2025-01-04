@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
 
-from app.utils import fetch_jobs
 from ... import schemas, models, oauth2
 from ...database import get_db
 from typing import List
@@ -47,7 +46,7 @@ def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[schemas.JobResponse])
 def get_all_jobs(db: Session = Depends(get_db)):
-    jobs = fetch_jobs(db)
+    jobs = db.query(models.Job).all()
 
     return jobs
 

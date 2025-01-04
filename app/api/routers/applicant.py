@@ -2,7 +2,6 @@ from typing import List, Literal
 from fastapi import APIRouter, Depends, status, HTTPException, Response, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
-from app.utils import fetch_applicant_profile
 from ... import schemas, models, oauth2
 from ...database import get_db
 import json
@@ -13,7 +12,7 @@ router = APIRouter(
     tags=['Applicants']
 )
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.ApplicantResponse)
+@router.post("/create", status_code=status.HTTP_201_CREATED, response_model=schemas.ApplicantResponse)
 async def create_applicant_profile(
         applicantData: str = Form(...), 
         resumeFile: UploadFile = File(...),
@@ -31,6 +30,7 @@ async def create_applicant_profile(
     existing_applicant = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
     
     if existing_applicant:
+        print("User already exist")
         return existing_applicant
 
     #Parse JSON string 
@@ -66,22 +66,27 @@ async def create_applicant_profile(
     return new_applicant
 
 
-@router.get("/", response_model=schemas.ApplicantResponse | Literal['NO_PROFILE_FOUND'])
+@router.get("/", response_model=schemas.ApplicantResponse | None)
 def get_applicant_profile(
         db: Session = Depends(get_db), 
         current_user = Depends(oauth2.get_current_user)
     ):
 
-    return fetch_applicant_profile(db, current_user.id)
+    applicant  = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
+
+    if not applicant: 
+        return None
+
+    return applicant
 
 
-@router.get("/all", response_model=List[schemas.Applicant])
+@router.get("/all", response_model=List[schemas.ApplicantResponse])
 def get_all_applicants(db: Session = Depends(get_db)):
     applicants = db.query(models.Applicant).all()
 
     return applicants
 
-@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/delete", status_code=status.HTTP_204_NO_CONTENT)
 def delete_applicant_profile(db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
     user_profile_query = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id)
 
@@ -96,7 +101,7 @@ def delete_applicant_profile(db: Session = Depends(get_db), current_user = Depen
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/", response_model=schemas.ApplicantResponse)
+@router.put("/update", response_model=schemas.ApplicantResponse)
 async def update_applicant_profile(
         applicantData: str = Form(...),
         resumeFile: UploadFile = None,

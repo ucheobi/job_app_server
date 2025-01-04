@@ -1,11 +1,7 @@
-from typing import List, Literal
 import bcrypt
 from fastapi import HTTPException, UploadFile
 import os
 from dotenv import load_dotenv
-from sqlalchemy.orm import Session
-from . import schemas, models
-from fastapi import status
 
 load_dotenv()
 
@@ -42,15 +38,3 @@ async def save_resume_file(resume_file: UploadFile) -> str:
     except Exception as e:
         raise HTTPException(status_code="402", detail="Error while saving file!")
     
-def fetch_applicant_profile(db:Session, user_id: int) -> schemas.ApplicantResponse | Literal['NO_PROFILE_FOUND']:
-    applicant  = db.query(models.Applicant).filter(models.Applicant.owner_id == user_id).first()
-
-    if not applicant:
-        return "NO_PROFILE_FOUND"
-
-    return applicant
-
-def fetch_jobs(db:Session) -> List[schemas.JobResponse]:
-    jobs = db.query(models.Job).all()
-
-    return jobs

@@ -121,7 +121,6 @@ class CompanyResponse(Company):
     id: int
     owner: UserResponse
     created_at: datetime
-    
     jobs: List[JobBase]
 
 
@@ -136,12 +135,7 @@ class JobResponse(JobBase):
     id: int
     company: Company
 
-class InitialData(BaseModel):
-    initial_applicant_data: ApplicantResponse
-    initial_job_data: JobResponse
-
 class ResponseTokenWithInitialData(BaseModel):
     access_token: str
     token_type: str
-    applicant: ApplicantResponse | Literal['NO_PROFILE_FOUND']
-    jobs: List[JobBase]
+    user: UserResponse

@@ -6,12 +6,12 @@ from typing import List
 
 
 router = APIRouter(
-    prefix="/users",
+    prefix="/user",
     tags=['Users']
 )
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.ResponseToken)
+@router.post("/signup", status_code=status.HTTP_201_CREATED, response_model=schemas.ResponseToken)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     _user = db.query(models.User).filter(models.User.email == user.email).first()
 
@@ -24,11 +24,10 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
     # send a token
     token = oauth2.create_access_token(data={
-        "user_id": new_user.id, 
-        "role": new_user.role, 
-        "email": user.email, 
-        "first_name": user.first_name, 
-        "last_name": user.last_name
+            "user_id": new_user.id, 
+            "role": new_user.role, 
+            "email": user.email, 
+            "first_name": user.first_name, 
         }
     )
 
@@ -52,27 +51,24 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         "token_type": "bearer"
     }
 
-@router.get("/", response_model=List[schemas.UserResponse])
+@router.get("/all", response_model=List[schemas.UserResponse])
 def get_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
 
     return users
 
-@router.delete("/{user_id}")
+@router.delete("/")
 def delete_user(
-        user_id: int, 
         db: Session = Depends(get_db),
         current_user: int = Depends(oauth2.get_current_user)
     ):
 
-    if not current_user:
-        return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
-    
-    user_query = db.query(models.User).filter(models.User.id == user_id)
+    user_query = db.query(models.User).filter(models.User.id == current_user.id)
+
     user = user_query.first()
 
     if user == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"user with id of {user_id} does not exist!!!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Something went wrong or account does not exist!")
     
     user_query.delete()
     db.commit()
