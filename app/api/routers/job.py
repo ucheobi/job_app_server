@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Response
 from sqlalchemy.orm import Session
 
+from app.utils import get_job_by_id
+
 from ... import schemas, models, oauth2
 from ...database import get_db
 from typing import List
@@ -35,12 +37,9 @@ def create_job(
     return new_job
 
 @router.get("/{job_id}", response_model=schemas.JobResponse)
-def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
-    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+def get_job(job_id: int, db: Session = Depends(get_db)):
+    job = get_job_by_id(job_id)
 
-    if not job :
-        raise HTTPException(status_code=404, detail="This job is no longer available!!")
-    
     return job
 
 
@@ -95,3 +94,43 @@ def delete_job(
 
     return schemas.CustomMessage(message="Job successfully deleted")
     
+
+@router.post("/apply")
+def create_application(
+    job: schemas.JobApplicationCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(oauth2.get_current_user)
+):
+    if current_user.role == "employer":
+        return Response(content="You are not authorized", status_code=status.HTTP_401_UNAUTHORIZED)
+
+    job_query = db.query(models.Job).filter(models.Job.id == job.job_id).first()
+
+    if not job_query:
+        return Response(content="This job no longer exist!", status_code=status.HTTP_404_NOT_FOUND)
+    
+    applicant = db.query(models.Applicant).filter(models.Applicant.owner_id == current_user.id).first()
+
+    application = {
+        "job_id": int(job.job_id),
+        "job_applicant_id": applicant.id,
+        "resume_file": applicant.resume
+    }
+
+    try:
+        db_application = models.JobApplication(**application)
+
+        db.add(db_application)
+        db.commit()
+        db.refresh(db_application)
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                        detail={
+                            "message": f"Something  unexpectedly went wrong!",
+                            "error": str(e)
+                        })
+
+    return schemas.CustomMessage(message="Application was successfully created")
+

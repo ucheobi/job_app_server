@@ -1,7 +1,11 @@
 import bcrypt
-from fastapi import HTTPException, UploadFile
+from fastapi import Depends, HTTPException, UploadFile
 import os
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
+
+from app import models
+from app.database import get_db
 
 load_dotenv()
 
@@ -38,3 +42,10 @@ async def save_resume_file(resume_file: UploadFile) -> str:
     except Exception as e:
         raise HTTPException(status_code="402", detail="Error while saving file!")
     
+def get_job_by_id(job_id: int, db: Session = Depends(get_db)):
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+
+    if not job :
+        raise HTTPException(status_code=404, detail="This job is no longer available!!")
+    
+    return job

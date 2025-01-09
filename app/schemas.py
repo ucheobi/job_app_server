@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import List, Literal
+from typing import List, Literal, Optional
 from enum import Enum
 from datetime import date, datetime
 
@@ -139,3 +139,27 @@ class ResponseTokenWithInitialData(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
+class ApplicationStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+
+class JobApplicationBase(BaseModel):
+    job_applicant_id: int
+    job_id: int
+    application_date: Optional[date] = date.today()
+    application_status: Optional[ApplicationStatus] = ApplicationStatus.PENDING
+    resume_file: Optional[str]
+
+class JobApplicationCreate(BaseModel):
+    job_id: int
+
+class JobApplicationUpdate(BaseModel):
+    application_status: Optional[ApplicationStatus]
+
+class JobApplicationResponse(JobApplicationBase):
+    id: int
+
+    class Config:
+        orm_mode: True
